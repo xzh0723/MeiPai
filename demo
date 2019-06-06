@@ -1,0 +1,34 @@
+import execjs
+import base64
+import requests
+
+baseUrl = 'https://www.meipai.com/squares/new_timeline?page={}&count=24&tid=62'
+
+headers = {
+    'Cookie': 'MUSID=mkhfis20csekc1cdlk2chlg7m6; sid=mkhfis20csekc1cdlk2chlg7m6; UM_distinctid=16b25149bbb2c9-052044f3027101-7a1b34-100200-16b25149bbc434; sensorsdata2015jssdkcross=%7B%22distinct_id%22%3A%2216b2517212529c-01c489df4609fc-2a792346-807840-16b2517212636c%22%2C%22%24device_id%22%3A%2216b2517212529c-01c489df4609fc-2a792346-807840-16b2517212636c%22%2C%22props%22%3A%7B%7D%7D; rank_tip=1; virtual_device_id=8d819e6a965c6c79a4543ed95e9a5c59; pvid=EomMKZsvjruftidQtcU3ToR0bw8WMZjL; searchStr=%E6%BD%98%E5%A4%A7%E7%94%9C%7C%E6%B3%A2%E5%A6%9E%7C; CNZZDATA1256786412=1207986510-1559689963-%7C1559782567; CNZZDATA1256786617=385851627-1559694726-https%253A%252F%252Fwww.meipai.com%252F%7C1559785851; meitustat=%7B%22device_id%22%3A%2216b251721405ba-03922624d85776-2a792346-807840-16b25172141837%22%2C%22session_id%22%3A%2216b2a82c01826e-0dc41c5129d08a-2a792346-807840-16b2a82c0191f5%22%2C%22session_start_time%22%3A1559786340376%2C%22last_session_active_time%22%3A1559786742580%2C%22spm%22%3A%5Bnull%2Cnull%2Cnull%5D%7D',
+    'Host': 'www.meipai.com',
+    'Referer': 'https://www.meipai.com/square/62',
+    'User-Agent': 'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/73.0.3683.75 Mobile Safari/537.36',
+    'X-Requested-With': 'XMLHttpRequest'
+}
+
+for page in range(1, 11):
+    videoList = requests.get(baseUrl.format(page), headers=headers).json()
+    for item in videoList:
+        videoInfo = {
+            'videoName': item['caption_origin'],
+            'user': item['user'],
+            'likes_count': item['likes_count'],
+            'comments_count': item['comments_count'],
+            'created_at': item['created_at']
+        }
+        video = item['video']
+        with open('decodeMP4.js', 'rb') as f:
+            js = f.read().decode()
+
+        ctx = execjs.compile(js)
+
+        video = ctx.call('decode', video)
+        videoUrl = base64.b64decode(video).decode()
+        videoInfo['video'] = videoUrl
+        print(videoInfo)
